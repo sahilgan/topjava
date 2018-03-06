@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
 public class MealsUtil {
@@ -25,6 +26,7 @@ public class MealsUtil {
                 new Meal(LocalDateTime.of(2015, Month.MAY, 31, 13, 0), "Обед", 500),
                 new Meal(LocalDateTime.of(2015, Month.MAY, 31, 20, 0), "Ужин", 510)
         );
+        List<MealWithExceed> m = markExceedList(meals, 2000);
         List<MealWithExceed> mealsWithExceeded = getFilteredWithExceeded(meals, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000);
         mealsWithExceeded.forEach(System.out::println);
 
@@ -107,5 +109,12 @@ public class MealsUtil {
 
     public static MealWithExceed createWithExceed(Meal meal, boolean exceeded) {
         return new MealWithExceed(meal.getDateTime(), meal.getDescription(), meal.getCalories(), exceeded);
+    }
+
+    public static List<MealWithExceed> markExceedList(List<Meal> mlist, Integer cal_limit) {
+        Map<LocalDate, Integer> excMeal = mlist.stream().collect(
+                groupingBy(Meal::getDate, Collectors.summingInt(Meal::getCalories))
+        );
+        return mlist.stream().map(m -> createWithExceed(m, excMeal.get(m.getDate()) > cal_limit)).collect(toList());
     }
 }
